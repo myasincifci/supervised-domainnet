@@ -16,6 +16,8 @@ from torch.optim import lr_scheduler
 
 from torch.distributions.beta import Beta
 
+from yasin_utils.metrics import PerDomainAccuracy
+
 class MixStyle(nn.Module):
     def __init__(self, p=0.5, alpha=0.1, eps=1e-6, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -110,6 +112,8 @@ class ResnetClf(L.LightningModule):
         self.accuracy = torchmetrics.classification.Accuracy(
             task="multiclass", num_classes=cfg.data.num_classes)
         
+        self.per_domain_accuracy = PerDomainAccuracy(num_domains=6)
+        
         self.cfg = cfg
 
     def training_step(self, batch, batch_idx) -> STEP_OUTPUT:
@@ -122,14 +126,20 @@ class ResnetClf(L.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx, dataloader_idx=0) -> None:
-        X, t = batch['image'], batch['label']
+        X, t, d = batch['image'], batch['label'], batch['domain']
 
         y = self.model(X)
         loss = self.criterion(y, t)
         self.accuracy(y, t)
+        self.per_domain_accuracy.update(y.argmax(dim=1), t, d)
 
         self.log("val/loss", loss.item())
         self.log("val/acc", self.accuracy, on_epoch=True)
+
+    def on_validation_epoch_end(self) -> None:
+        for i, v in enumerate(self.per_domain_accuracy.compute()):
+            self.log(name=f'val/acc_dom_{i}', value=v)
+        self.per_domain_accuracy.reset()
 
     def configure_optimizers(self) -> Any:
         optimizer = optim.SGD(params=self.parameters(), lr=self.cfg.param.lr, weight_decay=1e-4, momentum=0.9)
