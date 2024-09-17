@@ -1,27 +1,27 @@
 name: Base
 logging: True
-unlabeled: True
 
 model:
     pretrained: True
 
 data:
-    path: /tmp
-    num_classes: 7
+    path: /data
+    num_classes: 345
+    num_workers: 4
 
 param:
     lr: 2e-3
-    batch_size: 32
+    batch_size: 256
 
 trainer:
     max_steps: 100_000
     check_val_every_n_epoch: 1
 
 mixstyle:
-    active: True
+    active: False
     p: 1.0 
     alpha: 0.1
     eps: 1e-6
 
 logger:
-    project: supervised-pacs-base
+    project: supervised-domainnet

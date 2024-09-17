@@ -113,7 +113,7 @@ class ResnetClf(L.LightningModule):
         self.cfg = cfg
 
     def training_step(self, batch, batch_idx) -> STEP_OUTPUT:
-        X, t, d = batch
+        X, t = batch['image'], batch['label']
 
         y = self.model(X)
         loss = self.criterion(y, t)
@@ -122,7 +122,7 @@ class ResnetClf(L.LightningModule):
         return loss
     
     def validation_step(self, batch, batch_idx, dataloader_idx=0) -> None:
-        X, t, d = batch
+        X, t = batch['image'], batch['label']
 
         y = self.model(X)
         loss = self.criterion(y, t)
@@ -133,6 +133,5 @@ class ResnetClf(L.LightningModule):
 
     def configure_optimizers(self) -> Any:
         optimizer = optim.SGD(params=self.parameters(), lr=self.cfg.param.lr, weight_decay=1e-4, momentum=0.9)
-        # scheduler = lr_scheduler.StepLR(optimizer, )
 
-        return [optimizer]#, [scheduler]
+        return [optimizer]
