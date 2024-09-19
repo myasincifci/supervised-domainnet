@@ -8,3 +8,4 @@ outputs/
 lightning_logs/
 __pycache__/
 dist
+apptainer/*.sif

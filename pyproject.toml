@@ -23,6 +23,10 @@ dependencies = [
   'torchmetrics>=1.3.2',
   'hydra-core>=1.3.2',
   'wandb>=0.16.6',
+  'tqdm',
+  'matplotlib',
+  'lightly',
+  'yasin_utils@git+https://github.com/myasincifci/yasin-utils.git',
 ]
 
 [project.urls]
@@ -32,3 +36,6 @@ Issues = "https://github.com/myasincifci/template/issues"
 [tool.setuptools.packages.find]
 include = ["supervised_domainnet*"]
 namespaces = false
+
+[tool.hatch.metadata]
+allow-direct-references = true

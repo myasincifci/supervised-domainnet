@@ -7,7 +7,7 @@ model:
 data:
     path: /data
     num_classes: 345
-    num_workers: 4
+    num_workers: 16
 
 param:
     lr: 2e-3
@@ -18,8 +18,8 @@ trainer:
     check_val_every_n_epoch: 1
 
 mixstyle:
-    active: False
-    p: 1.0 
+    active: True
+    p: 0.5 
     alpha: 0.1
     eps: 1e-6
 
