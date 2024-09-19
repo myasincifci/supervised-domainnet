@@ -15,7 +15,7 @@
             "name": "Train",
             "type": "debugpy",
             "request": "launch",
-            "program": "template/train.py",
+            "program": "supervised_domainnet/train.py",
             "console": "integratedTerminal",
             "args": ["--config-name", "debug"]
         }

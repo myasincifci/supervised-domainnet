@@ -2,7 +2,7 @@ defaults:
     - base
 
 name: Debug
-logging: True
+logging: False
 
 data:
     path: /data

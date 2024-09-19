@@ -102,11 +102,58 @@ def res18(cfg):
 
     return model
 
-class ResnetClf(L.LightningModule):
+class ResnetPretrainHead(L.LightningModule):
     def __init__(self, cfg, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.model = res18(cfg)
+        self.criterion = nn.CrossEntropyLoss()
+        self.accuracy = torchmetrics.classification.Accuracy(
+            task="multiclass", num_classes=cfg.data.num_classes)
+        
+        # Disable gradients for backbone parameters
+        for name, param in self.model.named_parameters():
+            if not name.startswith('fc'):
+                param.requires_grad_(False)
+
+        # Disable batch-norm running mean/var
+        for name, module in self.model.named_modules():
+            if isinstance(module, torch.nn.BatchNorm2d):
+                module.eval()
+
+        self.cfg = cfg
+
+    def training_step(self, batch, batch_idx) -> STEP_OUTPUT:
+        X, t = batch['image'], batch['label']
+
+        y = self.model(X)
+        loss = self.criterion(y, t)
+        self.log("head/train/loss", loss.item())
+
+        return loss
+    
+    def validation_step(self, batch, batch_idx, dataloader_idx=0) -> None:
+        X, t = batch['image'], batch['label']
+
+        y = self.model(X)
+        loss = self.criterion(y, t)
+        self.accuracy(y, t)
+
+        self.log("head/val/loss", loss.item())
+        self.log("head/val/acc", self.accuracy, on_epoch=True)
+
+    def configure_optimizers(self) -> Any:
+        optimizer = optim.SGD(params=self.model.fc.parameters(), lr=self.cfg.param.lr, weight_decay=1e-4, momentum=0.9)
+
+        return [optimizer]
+
+class ResnetClf(L.LightningModule):
+    def __init__(self, weights=None, cfg=None, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.model = res18(cfg)
+        self.model.load_state_dict(weights)
+        self.model.requires_grad_(True)
 
         self.criterion = nn.CrossEntropyLoss()
         self.accuracy = torchmetrics.classification.Accuracy(
